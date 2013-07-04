@@ -56,9 +56,6 @@
 #    (optional) Add the option to set the mount point from the UI.
 #    Defaults to 'True'.
 #
-#  [*listen_ssl*]
-#    (optional) Defaults to false.
-#
 #  [*local_settings_template*]
 #    (optional) Location of template to use for local_settings.py generation.
 #    Defaults to 'horizon/local_settings.py.erb'.
@@ -66,7 +63,6 @@
 class horizon(
   $secret_key,
   $package_ensure          = 'present',
-  $bind_address            = '0.0.0.0',
   $cache_server_ip         = '127.0.0.1',
   $cache_server_port       = '11211',
   $swift                   = false,
@@ -80,20 +76,15 @@ class horizon(
   $api_result_limit        = 1000,
   $log_level               = 'DEBUG',
   $can_set_mount_point     = 'True',
-  $listen_ssl              = false,
   $local_settings_template = 'horizon/local_settings.py.erb'
 ) {
 
   include horizon::params
-  include apache::mod::wsgi
-  include apache
 
   # I am totally confused by this, I do not think it should be installed...
   if ($::osfamily == 'Debian') {
     package { 'node-less': }
   }
-
-  file { $::horizon::params::httpd_config_file: }
 
   Service <| title == 'memcached' |> -> Class['horizon']
 
@@ -119,37 +110,4 @@ class horizon(
     require => Package['horizon']
   }
 
-  file_line { 'horizon_redirect_rule':
-    path    => $::horizon::params::httpd_config_file,
-    line    => "RedirectMatch permanent ^/$ ${::horizon::params::root_url}/",
-    require => Package['horizon'],
-    notify  => Service[$::horizon::params::http_service]
-  }
-
-  file_line { 'httpd_listen_on_bind_address_80':
-    path    => $::horizon::params::httpd_listen_config_file,
-    match   => '^Listen (.*):?80$',
-    line    => "Listen ${bind_address}:80",
-    require => Package['horizon'],
-    notify  => Service[$::horizon::params::http_service],
-  }
-
-  if $listen_ssl {
-    file_line { 'httpd_listen_on_bind_address_443':
-      path    => $::horizon::params::httpd_listen_config_file,
-      match   => '^Listen (.*):?443$',
-      line    => "Listen ${bind_address}:443",
-      require => Package['horizon'],
-      notify  => Service[$::horizon::params::http_service],
-    }
-  }
-
-  $django_wsgi = '/usr/share/openstack-dashboard/openstack_dashboard/wsgi/django.wsgi'
-
-  file_line { 'horizon root':
-    path    => $::horizon::params::httpd_config_file,
-    line    => "WSGIScriptAlias ${::horizon::params::root_url} ${django_wsgi}",
-    match   => 'WSGIScriptAlias ',
-    require => Package['horizon'],
-  }
 }

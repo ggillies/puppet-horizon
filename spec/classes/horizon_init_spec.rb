@@ -5,10 +5,6 @@ describe 'horizon' do
     { 'secret_key' => 'elj1IWiLoWHgcyYxFVLj7cM5rGOOxWl0' }
   end
 
-  let :pre_condition do
-    'include apache'
-  end
-
   let :fixtures_path do
     File.expand_path(File.join(__FILE__, '..', '..', 'fixtures'))
   end
@@ -25,8 +21,6 @@ describe 'horizon' do
       })
     end
 
-    it { should contain_service('httpd').with_name('httpd') }
-    it { should contain_file('/etc/httpd/conf.d/openstack-dashboard.conf') }
   end
 
   describe 'on Debian platforms' do
@@ -36,9 +30,6 @@ describe 'horizon' do
         :operatingsystemrelease => '6.0'
       })
     end
-
-    it { should contain_service('httpd').with_name('apache2') }
-    it { should_not contain_file('/etc/httpd/conf.d/openstack-dashboard.conf') }
 
     describe 'with default parameters' do
       it { should contain_package('horizon').with_ensure('present') }

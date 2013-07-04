@@ -6,24 +6,20 @@ class horizon::params {
 
   case $::osfamily {
     'RedHat': {
-      $http_service                = 'httpd'
-      $http_modwsgi                = 'mod_wsgi'
       $package_name                = 'openstack-dashboard'
       $config_file                 = '/etc/openstack-dashboard/local_settings'
-      $httpd_config_file           = '/etc/httpd/conf.d/openstack-dashboard.conf'
-      $httpd_listen_config_file    = '/etc/httpd/conf/httpd.conf'
-      $root_url                    = '/dashboard'
+      $django_wsgi                 = '/usr/share/openstack-dashboard/openstack_dashboard/wsgi/django.wsgi'
+      # Apache Specific Settings
+      $apache_service              = 'httpd'
+      $apache_config_file          = '/etc/httpd/conf.d/openstack-dashboard.conf'
+      $apache_listen_config_file   = '/etc/httpd/conf/httpd.conf'
+      $apache_root_url             = '/dashboard'
       $apache_user                 = 'apache'
       $apache_group                = 'apache'
     }
     'Debian': {
-      $http_service                = 'apache2'
       $config_file                 = '/etc/openstack-dashboard/local_settings.py'
-      $httpd_config_file           = '/etc/apache2/conf.d/openstack-dashboard.conf'
-      $httpd_listen_config_file    = '/etc/apache2/ports.conf'
-      $root_url                    = '/horizon'
-      $apache_user                 = 'www-data'
-      $apache_group                = 'www-data'
+      $django_wsgi                 = '/usr/share/openstack-dashboard/openstack_dashboard/wsgi/django.wsgi'
       case $::operatingsystem {
         'Debian': {
             $package_name          = 'openstack-dashboard-apache'
@@ -32,6 +28,13 @@ class horizon::params {
             $package_name          = 'openstack-dashboard'
         }
       }
+      # Apache Specific Settings
+      $apache_service               = 'apache2'
+      $apache_config_file           = '/etc/apache2/conf.d/openstack-dashboard.conf'
+      $apache_listen_config_file    = '/etc/apache2/ports.conf'
+      $apache_root_url              = '/horizon'
+      $apache_user                  = 'www-data'
+      $apache_group                 = 'www-data'
     }
     default: {
       fail("Unsupported osfamily: ${::osfamily} operatingsystem: ${::operatingsystem}, module ${module_name} only support osfamily RedHat and Debian")
